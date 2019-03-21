@@ -7,21 +7,12 @@
 
 package frc.robot;
 
-import edu.wpi.cscore.MjpegServer;
-import edu.wpi.cscore.UsbCamera;
-import edu.wpi.cscore.VideoSource;
-import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.buttons.Button;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.subsystems.CameraSubSystem;
 import frc.vision.PixyCamera2;
-//import io.github.pseudoresonance.pixy2api.links.I2CLink;
-//import io.github.pseudoresonance.pixy2api.links.SPILink;
 import frc.vision.PixyPacket;
 
 /**
@@ -35,9 +26,6 @@ public class Robot extends TimedRobot {
   private String m_autoSelected;
   private PixyCamera2 pixyCamera2 = null;
   public static CameraSubSystem cameraSubsystem = new CameraSubSystem();
-  private Joystick joystick = null;
-  private JoystickButton buttonB = null;
-  private JoystickButton buttonX = null;
 
   /**
    * This function is run when the robot is first started up and should be
@@ -45,24 +33,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-
-    pixyCamera2 = new PixyCamera2(I2C.Port.kOnboard, 0x54);
-    
-
-    //buttonB.whenPressed(new CameraSwitchCargo());
-    //buttonX.whenPressed(new CameraSwitchHatch());
-
-    /*try {
-      usbCamera0 = CameraServer.getInstance().startAutomaticCapture("HatchCam", 0);
-      usbCamera1 = CameraServer.getInstance().startAutomaticCapture("CargoCam", 1);
-      cameraSwitchServer = CameraServer.getInstance().addSwitchedCamera("switchCam");
-    } catch (Exception e) {
-      System.out.println(e.getMessage());
-    }
-    */
-
-    //pixyCamera = new PixyCamera(new SPILink());
-    
+    pixyCamera2 = new PixyCamera2(I2C.Port.kOnboard, 0x54);    
   }
 
   /**
@@ -128,13 +99,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
-    
-    
-    
-    // System.out.println("Pixy 2 X: " + pixyPacket.X);
-    // System.out.println("Pixy 2 Y: " + pixyPacket.Y);
-    // System.out.println("Pixy 2 Width: " + pixyPacket.Width);
-    // System.out.println("Pixy 2 Height: " + pixyPacket.Height);
   }
 
   /**
