@@ -77,6 +77,9 @@ public class PixyPacket {
         return width * height;
     }
 
+    public int getXError() {
+        return x - 158;
+    }
     //public int checksumError;
     
     public String toString() {

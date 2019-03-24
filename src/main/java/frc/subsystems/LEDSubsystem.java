@@ -7,40 +7,28 @@
 
 package frc.subsystems;
 
-import edu.wpi.cscore.UsbCamera;
-import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.command.Subsystem;
-import frc.robot.Robot;
-import frc.commands.GetBlocksCommand;
-import frc.vision.PixyCamera2;
-import frc.vision.PixyPacket;
+import edu.wpi.first.wpilibj.Relay;
 
 /**
  * Add your docs here.
  */
-public class CameraSubSystem extends Subsystem {
+public class LEDSubsystem extends Subsystem {
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
+  private Relay led;
 
-  private PixyCamera2 pixy;
-  PixyPacket[] packet = new PixyPacket[2];
-
-  public CameraSubSystem() {
-    pixy = new PixyCamera2(Port.kOnboard, 0x54);
+  public LEDSubsystem(int channel) {
+    led = new Relay(channel);
   }
 
-  public void getVersion() {
-    pixy.getVersion();
-  }
-
-  public void getBlocks() {
-    pixy.getBlocks(packet, (byte) 0x1, 2);
-  }
-  
   @Override
   public void initDefaultCommand() {
     // Set the default command for a subsystem here.
     // setDefaultCommand(new MySpecialCommand());
-    // setDefaultCommand(new GetBlocksCommand());
+  }
+
+  public void setLED(Relay.Value val) {
+    led.set(val);
   }
 }

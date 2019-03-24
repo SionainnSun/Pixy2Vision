@@ -3,6 +3,7 @@ package frc.vision;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import java.util.Random;
 
 public class PixyCamera2
 {
@@ -34,10 +35,24 @@ public class PixyCamera2
      * @return
      */
     private int bytesToInt(byte upper, byte lower) {
-        System.out.println("upper: " + upper + " lower: " + lower);
         return (((int) upper & 0xff) << 8) | ((int) lower & 0xff);
     }
 
+    /**
+     * Creates a new array that is equal to a section of the original array. Like the substring method
+     * @param arr The original array
+     * @param start The index to start copying from
+     * @param end The index to stop copying at
+     * @return An array filled with values from arr[start] to arr[end-1]
+     */
+    private byte[] arraySubsection(byte[] arr, int start, int end) {
+		byte[] res = new byte[end-start];
+		for(int i = start; i < end; i++) {
+			res[i-start] = arr[i];
+		}
+		return res;
+    }
+    
     /**
      * Pixy2 Camera class
      *                                                                                
@@ -63,12 +78,121 @@ public class PixyCamera2
 
         byte[] responsePacket = new byte[PIXY_BUFFERSIZE];
         
-        if (pixy2.transaction(requestPacket, 0x4, responsePacket, responsePacket.length) == false) {
+        if (pixy2.transaction(requestPacket, 0x4, responsePacket, 0x20) == false) {
             SmartDashboard.putRaw("Pixy Versions", responsePacket);
             return true;
         } else {
             return false;
         }
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public byte[] getVersionArray() {
+        byte requestPacket[] = new byte[PIXY_BUFFERSIZE];
+        requestPacket[0] = (byte) (PIXY_NO_CHECKSUM_SYNC & 0xFF);
+        requestPacket[1] = (byte) ((PIXY_NO_CHECKSUM_SYNC >> 8) & 0xFF);
+        requestPacket[2] = (byte) PIXY_GETVERSION_TYPE;
+        requestPacket[3] = (byte) 0x0;
+
+        byte[] responsePacket = new byte[PIXY_BUFFERSIZE];
+        
+        if (pixy2.transaction(requestPacket, 0x4, responsePacket, 0x20) == false) {
+            SmartDashboard.putRaw("Pixy Versions", responsePacket);
+            return responsePacket;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public String getHardwareVersion() {
+        byte[] rawData = getVersionArray().clone();
+        int hardwareVers = bytesToInt(rawData[6], rawData[7]);
+        return hardwareVers + "";
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public String getFirmwareVersion() {
+        byte[] rawData = getVersionArray().clone();
+        int majorFirmwareVers = (int) rawData[8];
+        int minorFirmwareVers = (int) rawData[9];
+        int firmwareBuild = bytesToInt(rawData[10], rawData[11]);
+        return majorFirmwareVers + "." + minorFirmwareVers + "." + firmwareBuild;
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public String getFirmwareType() {
+        byte[] rawData = getVersionArray().clone();
+        return new String(arraySubsection(rawData, 12, 0x20));
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public boolean getResolution() {
+        byte[] requestPacket = new byte[PIXY_BUFFERSIZE];
+        requestPacket[0] = (byte) (PIXY_NO_CHECKSUM_SYNC & 0xFF);
+        requestPacket[1] = (byte) ((PIXY_NO_CHECKSUM_SYNC >> 8) & 0xFF);
+        requestPacket[2] = (byte) 0x0C;
+        requestPacket[3] = (byte) 0x01;
+        requestPacket[4] = (byte) 0x00; //Type (unused - reserved for future versions). 0-255
+
+        byte[] responsePacket = new byte[PIXY_BUFFERSIZE];
+
+        if(pixy2.transaction(requestPacket, 0x05, responsePacket, 0x20)) {
+            SmartDashboard.putRaw("Pixy Resolution", responsePacket);
+            System.out.println("resolution obtained");
+            return true;
+        } else {
+            System.out.println("no resolution");
+            return false;
+        }
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public byte[] getResolutionArray() {
+        byte[] requestPacket = new byte[PIXY_BUFFERSIZE];
+        requestPacket[0] = (byte) (PIXY_NO_CHECKSUM_SYNC & 0xFF);
+        requestPacket[1] = (byte) ((PIXY_NO_CHECKSUM_SYNC >> 8) & 0xFF);
+        requestPacket[2] = (byte) 0x0C;
+        requestPacket[3] = (byte) 0x01;
+        requestPacket[4] = (byte) 0x00; //Type (unused - reserved for future versions). 0-255
+
+        byte[] responsePacket = new byte[PIXY_BUFFERSIZE];
+
+        if(pixy2.transaction(requestPacket, 0x05, responsePacket, 0x20)) {
+            SmartDashboard.putRaw("Pixy Resolution", responsePacket);
+            return responsePacket;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public String getResolutionReadable() {
+        byte[] rawData = getResolutionArray().clone();
+        int width = bytesToInt(rawData[6], rawData[7]);
+        int height = bytesToInt(rawData[8], rawData[9]);
+        return "Width: " + width + " Height: " + height;
     }
 
     /**
@@ -90,13 +214,15 @@ public class PixyCamera2
         byte[] responsePacket = new byte[PIXY_BUFFERSIZE];
 
         if(pixy2.transaction(requestPacket, 0x6, responsePacket, responsePacket.length) == false) {
-            SmartDashboard.putRaw("Pixy Versions", responsePacket);
+            SmartDashboard.putRaw("Pixy Lamp", responsePacket);
             return true;
         } else {
+            SmartDashboard.putString("result", "Lamps won't turn off!!");
             return false;
         }
     }
 
+    Random random = new Random();
     /**
      * Sends the GetBlocks command to Pixy2 and waits for the GetBlocks response.
      * This method uses the I2C class transaction method to send and receive packets.
@@ -117,23 +243,34 @@ public class PixyCamera2
         PixyPacket pixyPacket = null;
         byte responsePacket[] = new byte[PIXY_BUFFERSIZE];
 
-        //I don't like this method of doing it. It doesn't sit right with me and I don't think it will work if you're trying to get more than one block. Gotta come back to this tomorrow...
-        if (pixy2.transaction(requestPacket, 0x6, responsePacket, responsePacket.length) == false) {
+        //I don't like this method of doing it. I don't think it will work if you're trying to get more than one block. Gotta come back to this tomorrow...
+        if (pixy2.transaction(requestPacket, 0x6, responsePacket, 0x20) == false) {
             SmartDashboard.putRaw("PIXY CCC Blocks", responsePacket);
             for (int i = 0; i < numBlocks; i++) {
                 pixyPacketArray[i] = new PixyPacket();
                 pixyPacket = pixyPacketArray[i];
                 if (responsePacket[2] == PIXY_RESPONSE_BLOCKS) {
-                  pixyPacket.setSignature(bytesToInt(responsePacket[8 + i * RESPONSE_BLOCK_LENGTH], 
-                    responsePacket[7 + i * RESPONSE_BLOCK_LENGTH]));
-                  pixyPacket.setX(bytesToInt(responsePacket[10 + RESPONSE_BLOCK_LENGTH * i], 
-                    responsePacket[9 + RESPONSE_BLOCK_LENGTH * i]));
-                  pixyPacket.setY(bytesToInt(responsePacket[12 + RESPONSE_BLOCK_LENGTH * i], 
-                    responsePacket[11 + RESPONSE_BLOCK_LENGTH * i]));
-                  pixyPacket.setWidth(bytesToInt(responsePacket[14 + RESPONSE_BLOCK_LENGTH * i], 
-                    responsePacket[13 + RESPONSE_BLOCK_LENGTH * i]));
-                  pixyPacket.setHeight(bytesToInt(responsePacket[16 + RESPONSE_BLOCK_LENGTH * i], 
-                    responsePacket[15 + RESPONSE_BLOCK_LENGTH * i]));
+                  pixyPacket.setSignature(bytesToInt(responsePacket[7 + i * RESPONSE_BLOCK_LENGTH], 
+                    responsePacket[6 + i * RESPONSE_BLOCK_LENGTH]));
+                  pixyPacket.setX(bytesToInt(responsePacket[9 + RESPONSE_BLOCK_LENGTH * i], 
+                    responsePacket[8 + RESPONSE_BLOCK_LENGTH * i]));
+                  pixyPacket.setY(bytesToInt(responsePacket[11 + RESPONSE_BLOCK_LENGTH * i], 
+                    responsePacket[10 + RESPONSE_BLOCK_LENGTH * i]));
+                  pixyPacket.setWidth(bytesToInt(responsePacket[13 + RESPONSE_BLOCK_LENGTH * i], 
+                    responsePacket[12 + RESPONSE_BLOCK_LENGTH * i]));
+                  pixyPacket.setHeight(bytesToInt(responsePacket[15 + RESPONSE_BLOCK_LENGTH * i], 
+                    responsePacket[14 + RESPONSE_BLOCK_LENGTH * i]));
+
+                    double realX = pixyPacket.getX() + random.nextDouble() * 0.01;
+                    double filterX = pixyPacket.getX() < 500 ? pixyPacket.getX() : random.nextDouble() * 0.01;
+                    double filterY = pixyPacket.getY() < 500 ? pixyPacket.getY() : random.nextDouble() * 0.01;
+                    double filterW = pixyPacket.getWidth() < 500 ? pixyPacket.getWidth() : random.nextDouble() * 0.01;
+                    double filterH = pixyPacket.getHeight() < 500 ? pixyPacket.getHeight() : random.nextDouble() * 0.01;
+                    SmartDashboard.putNumber("Real X", realX);
+                    SmartDashboard.putNumber("X", filterX);
+                    SmartDashboard.putNumber("Y", filterY);
+                    SmartDashboard.putNumber("Width", filterW);
+                    SmartDashboard.putNumber("Height", filterH);
                 }
             }
             return true;

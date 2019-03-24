@@ -8,12 +8,15 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
-import frc.subsystems.CameraSubSystem;
 import frc.vision.PixyCamera2;
 import frc.vision.PixyPacket;
+import frc.subsystems.DriveTrainSubsystem;
+import frc.subsystems.LEDSubsystem;
+import frc.OI;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -24,8 +27,10 @@ import frc.vision.PixyPacket;
  */
 public class Robot extends TimedRobot {
   private String m_autoSelected;
-  private PixyCamera2 pixyCamera2 = null;
-  public static CameraSubSystem cameraSubsystem = new CameraSubSystem();
+  public static PixyCamera2 pixyCamera2 = null;
+  public static DriveTrainSubsystem driveTrain = new DriveTrainSubsystem();
+  public static LEDSubsystem ledSubsystem = new LEDSubsystem(1); //PLS CHANGE IF THIS ISN'T ACTUALLY 0
+  public static OI oi;
 
   /**
    * This function is run when the robot is first started up and should be
@@ -33,6 +38,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
+    oi = new OI(0);
     pixyCamera2 = new PixyCamera2(I2C.Port.kOnboard, 0x54);    
   }
 
@@ -84,21 +90,17 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    PixyPacket[] pixyPacket = new PixyPacket[1];
-    pixyCamera2.getVersion();
-    if (pixyCamera2.getBlocks(pixyPacket, (byte) (PixyCamera2.CCC_SIG1), 1)) {
-      System.out.println("entering if");
-      for (int i = 0; i < pixyPacket.length; i++) {
-        System.out.println(pixyPacket[i]);
-        System.out.println("i: " + i);
-      }
-    }
+    // pixyCamera2.getResolution();
+    // pixyCamera2.setLamps((byte) 0, (byte) 0);
+    // pixyCamera2.getVersion();
   }
+
   /**
    * This function is called periodically during operator control.
    */
   @Override
   public void teleopPeriodic() {
+    Scheduler.getInstance().run();
   }
 
   /**

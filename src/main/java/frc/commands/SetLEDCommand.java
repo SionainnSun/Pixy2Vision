@@ -7,14 +7,19 @@
 
 package frc.commands;
 
+import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.command.Command;
 import frc.robot.Robot;
 
-public class GetBlocksCommand extends Command {
-  public GetBlocksCommand() {
+public class SetLEDCommand extends Command {
+
+Relay.Value val = null;
+
+  public SetLEDCommand(Relay.Value val) {
     // Use requires() here to declare subsystem dependencies
     // eg. requires(chassis);
-    requires(Robot.cameraSubsystem);
+    requires(Robot.ledSubsystem);
+    this.val = val;
   }
 
   // Called just before this Command runs the first time
@@ -25,13 +30,13 @@ public class GetBlocksCommand extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-    Robot.cameraSubsystem.getBlocks();
+    Robot.ledSubsystem.setLED(val);
   }
 
   // Make this return true when this Command no longer needs to run execute()
   @Override
   protected boolean isFinished() {
-    return false;
+    return true;
   }
 
   // Called once after isFinished returns true
